@@ -75,7 +75,7 @@ docs/_build/
 # PyBuilder
 .pybuilder/
 target/
-
+practics/pract1/release_log.md
 # Jupyter Notebook
 .ipynb_checkpoints
 

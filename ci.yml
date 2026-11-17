@@ -1,0 +1,83 @@
+# ci.yml
+
+name: CI
+
+on:
+  push:
+    branches: ["feature/**"]            # каждый пуш в любую feature-ветку
+    paths:
+      - "practics/pract1/**"            # только если менялся общий проект
+      - ".github/workflows/ci.yml"      # ...или сам конвейер
+  pull_request:
+    branches: [main]                    # и каждая PR в main (ворота качества)
+
+permissions:
+  contents: read                        # минимальные права: только чтение кода
+
+defaults:
+  run:
+    working-directory: practics/pract1  # все run-команды — из папки проекта
+
+jobs:
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5       # склонировать репозиторий на раннер
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7     # официальный экшен установки uv
+        with:
+          enable-cache: true            # кэш пакетов между запусками
+          cache-dependency-glob: "practics/pract1/uv.lock"
+      - name: Install deps from lock
+        run: uv sync --locked
+      - name: ruff check
+        run: uv run ruff check .
+      - name: ruff format check
+        run: uv run ruff format --check .
+
+  test:
+    name: Tests (pytest)
+    needs: lint                         # fail fast: не тестируем неlintованный код
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: "practics/pract1/uv.lock"
+      - run: uv sync --locked
+      - name: pytest + coverage
+        run: >
+          uv run pytest -v
+          --junitxml=junit.xml
+          --cov=todo_api
+          --cov-report=term
+          --cov-report=xml
+      - name: Upload reports
+        if: always()                    # сохранить отчёты ДАЖЕ при падении тестов
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            practics/pract1/junit.xml
+            practics/pract1/coverage.xml
+
+  build:
+    name: Build (uv build)
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: "practics/pract1/uv.lock"
+      - name: uv build
+        run: uv build
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: practics/pract1/dist/*
