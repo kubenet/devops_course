@@ -80,6 +80,11 @@ class TestCreateTodo:
         r1 = client.post("/todos", json={"title": "Первая"})
         r2 = client.post("/todos", json={"title": "Вторая"})
         assert r2.json()["id"] == r1.json()["id"] + 1
+    
+    def test_create_empty_title_returns_422(self):
+        """Пустой заголовок отклоняется на уровне API."""
+        response = client.post("/todos", json={"title": "   "})
+        assert response.status_code == 422
 
 
 class TestListTodos:
