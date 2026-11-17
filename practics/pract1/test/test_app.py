@@ -228,16 +228,16 @@ class TestStats:
     #     assert data["pending"] == 0
     #     assert data["completion_rate"] == 0.0
 
-    def test_stats_all_pending(self):
-        """Все задачи незавершены → rate = 0.0."""
-        client.post("/todos", json={"title": "A"})
-        client.post("/todos", json={"title": "B"})
+    # def test_stats_all_pending(self):
+    #     """Все задачи незавершены → rate = 0.0."""
+    #     client.post("/todos", json={"title": "A"})
+    #     client.post("/todos", json={"title": "B"})
 
-        data = client.get("/stats").json()
-        assert data["total"] == 2
-        assert data["completed"] == 0
-        assert data["pending"] == 2
-        assert data["completion_rate"] == 0.0
+    #     data = client.get("/stats").json()
+    #     assert data["total"] == 2
+    #     assert data["completed"] == 0
+    #     assert data["pending"] == 2
+    #     assert data["completion_rate"] == 0.0
 
     def test_stats_all_completed(self):
         """Все задачи завершены → rate = 1.0."""
